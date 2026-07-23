@@ -1,9 +1,7 @@
-
-
 // ==========================================
 // CONFIGURATION
 // ==========================================
-// 🔑 Insert your 32-character key from openweathermap.org/api_keys
+// 🔑 Insert your 32-character key from openopenweathermap.org/api_keys
 const API_KEY = "5fd0a33db380e3dfeeec4d88e5cae8c6";
 
 let currentUnit = "metric";
@@ -161,7 +159,6 @@ async function getForecast(lat, lon) {
 // UI & DYNAMIC ENVIRONMENT LOGIC
 // ==========================================
 
-// High-reliability video sources for different weather types
 // Local Video Map for Weather Types
 const weatherVideos = {
     clearDay: "./videos/clear-day.mp4",
@@ -174,6 +171,7 @@ const weatherVideos = {
     mist: "./videos/mist.mp4",
     default: "./videos/default.mp4"
 };
+
 function updateCurrentWeather(data) {
     const unitSymbol = currentUnit === "metric" ? "°C" : "°F";
     const speedUnit = currentUnit === "metric" ? "km/h" : "mph";
@@ -204,7 +202,6 @@ function updateCurrentWeather(data) {
     }
 
     // 3. Determine Dynamic Background Video & Weather Condition
-   // Determine Dynamic Background Video & Weather Condition
     const mainWeather = data.weather[0].main.toLowerCase();
     let selectedVideoUrl = isNight ? weatherVideos.clearNight : weatherVideos.clearDay;
 
@@ -234,24 +231,24 @@ function updateCurrentWeather(data) {
         currentWeatherCondition = "clear";
     }
 
-    // Load & Play Your Local Video
-   const videoElement = document.getElementById("background-video");
-if (videoElement) {
-    if (!videoElement.src.includes(selectedVideoUrl)) {
-        videoElement.src = selectedVideoUrl;
-        videoElement.load();
-        
-        // Ensure muted property is set via JS as well
-        videoElement.muted = true;
-        
-        const playPromise = videoElement.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(err => {
-                console.warn("Autoplay prevented by browser, waiting for user interaction:", err);
-            });
+    // 4. Load & Play Video Safely to prevent AbortError and autoplay blocking
+    const videoElement = document.getElementById("background-video");
+    if (videoElement) {
+        // Only change source and trigger play if it's a different video
+        if (!videoElement.src.endsWith(selectedVideoUrl.replace("./", ""))) {
+            videoElement.src = selectedVideoUrl;
+            videoElement.muted = true;
+            videoElement.load();
+            
+            const playPromise = videoElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.warn("Autoplay was prevented or interrupted:", err);
+                });
+            }
         }
     }
-}
+
     // 5. Trigger Canvas Particle Engine (Rain, Snow, Lightning FX)
     initWeatherParticles(currentWeatherCondition);
 
@@ -310,6 +307,7 @@ if (videoElement) {
     setText("sunrise", formatTime(data.sys.sunrise, data.timezone));
     setText("sunset", formatTime(data.sys.sunset, data.timezone));
 }
+
 // 🕒 Hourly Forecast
 function updateHourlyForecast(forecastList) {
     const hourlyContainer = document.getElementById("hourlyContainer");
@@ -586,6 +584,7 @@ if (locationBtn) {
 
 // Initial Run
 detectUserLocation();
+
 // ==========================================
 // INTERACTIVE FOOTER LOGIC
 // ==========================================
@@ -624,6 +623,7 @@ if (footerUnitBtn) {
         if (topUnitBtn) topUnitBtn.click(); // Triggers existing unit change logic
     });
 }
+
 // ==========================================
 // FOOTER FEEDBACK INTERACTION LOGIC
 // ==========================================
@@ -672,6 +672,7 @@ if (feedbackForm) {
         }, 4000);
     });
 }
+
 // Share Dashboard Quick Action
 const shareDashBtn = document.getElementById("shareDashBtn");
 if (shareDashBtn) {
