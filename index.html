@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherPulse | Live Interactive Dashboard</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- Leaflet.js Interactive Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet.js Map Library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- App Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Dynamic Background Video -->
+   <!-- Dynamic Background Video -->
+<!-- Remove the <source> tag entirely and use only this: -->
+<video id="background-video" autoplay loop muted playsinline>
+    <source src="./videos/default.mp4" type="video/mp4">
+</video>
+    <!-- Overlay Tint -->
+    <div class="overlay"></div>
+
+    <div class="container">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-cloud-sun animated-logo"></i>
+                <h2>WeatherPulse</h2>
+            </div>
+
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="cityInput" placeholder="Search city...">
+                <button id="searchBtn">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div class="nav-right">
+                <button class="icon-nav-btn" id="refreshBtn" title="Refresh Live Data">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                
+                <button class="location-btn" id="locationBtn">
+                    <i class="fa-solid fa-location-crosshairs"></i> My Location
+                </button>
+
+                <button class="unit-btn" id="unitBtn">°C</button>
+            </div>
+        </nav>
+
+        <!-- MAIN DASHBOARD -->
+        <main class="dashboard">
+            <!-- LEFT PANEL -->
+            <section class="left-panel">
+                <!-- HERO SECTION -->
+                <section class="hero">
+                    <div class="weather-dashboard">
+                        <div class="weather-left">
+                            <h1 class="temperature" id="temperature">--°C</h1>
+                            <h2 class="city" id="city">Loading...</h2>
+                            <p class="description" id="description">Locating weather...</p>
+                            <div class="weather-icon">
+                                <i id="weatherIcon" class="fa-solid fa-cloud-sun animated-weather-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="weather-right">
+                            <div class="live-time">
+                                <h3 id="current-day">--</h3>
+                                <h1 id="current-time">--:--:-- PM</h1>
+                                <p id="current-date">-- -- ----</p>
+                                <p class="location" id="country-name">
+                                    <i class="fa-solid fa-location-dot"></i> --
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 📊 TEMPERATURE & HUMIDITY CHARTS -->
+                <section class="chart-section">
+                    <h2 class="section-title">24-Hour Weather Trends</h2>
+                    <div class="chart-card">
+                        <canvas id="weatherChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- HOURLY FORECAST -->
+                <section class="hourly-forecast">
+                    <h2 class="section-title">Today's Hourly Forecast</h2>
+                    <div class="hourly-container" id="hourlyContainer"></div>
+                </section>
+
+                <!-- DAILY FORECAST -->
+                <section class="forecast-panel">
+                    <h2 class="section-title">6-Day Forecast Overview</h2>
+                    <div class="forecast-list" id="forecastList"></div>
+                </section>
+            </section>
+
+            <!-- RIGHT PANEL -->
+            <aside class="right-panel">
+                <!-- 🗺 INTERACTIVE MAP -->
+                <section class="map-section">
+                    <h2 class="section-title">Interactive Weather Map</h2>
+                    <div id="map" class="map-card"></div>
+                </section>
+
+                <!-- TODAY'S HIGHLIGHTS -->
+                <section class="highlights">
+                    <h2 class="section-title">Today's Highlights</h2>
+                    <div class="highlight-grid">
+                        
+                        <div class="metric-card cyan-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-droplet animated-icon"></i>
+                                <h3>Humidity</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="humidity">--%</span>
+                                <span class="metric-badge" id="humidity-badge">--</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="humidity-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card blue-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-wind animated-icon"></i>
+                                <h3>Wind Speed</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="wind">-- km/h</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="wind-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card purple-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                <h3>Pressure</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="pressure">-- hPa</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="pressure-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card emerald-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-eye"></i>
+                                <h3>Visibility</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="visibility">-- km</span>
+                                <span class="metric-badge badge-green" id="visibility-badge">--</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="visibility-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card teal-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-temperature-arrow-down"></i>
+                                <h3>Min Temp</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="temp-min">--°C</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="temp-min-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card orange-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-temperature-arrow-up"></i>
+                                <h3>Max Temp</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="temp-max">--°C</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="temp-max-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- STATISTICS -->
+                <section class="stats-section">
+                    <h2 class="section-title">Weather Statistics</h2>
+                    <div class="stats-grid">
+                        
+                        <div class="metric-card amber-accent gauge-card">
+                            <div class="gauge-left">
+                                <div class="card-header">
+                                    <i class="fa-solid fa-temperature-three-quarters"></i>
+                                    <h3>Feels Like</h3>
+                                </div>
+                                <div class="card-divider"></div>
+                                <span class="metric-value" id="feels-like">--°C</span>
+                                <span class="metric-badge" id="feels-badge">--</span>
+                            </div>
+                            <div class="circular-indicator">
+                                <svg class="circle-svg" viewBox="0 0 36 36">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle-fill" id="feels-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="metric-card cyan-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-droplet"></i>
+                                <h3>Dew Point</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="dew-point">--°C</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="dew-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card blue-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-cloud-rain"></i>
+                                <h3>Rain Chance</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="pop">--%</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="pop-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card purple-accent">
+                            <div class="card-header">
+                                <i class="fa-solid fa-compass"></i>
+                                <h3>Wind Direction</h3>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="metric-value-row">
+                                <span class="metric-value" id="wind-dir">--°</span>
+                                <span class="metric-badge" id="wind-cardinal">--</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="wind-dir-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- SUN INFORMATION -->
+                <section class="sun-section">
+                    <h2 class="section-title">Sun Information</h2>
+                    <div class="sun-grid">
+                        <div class="metric-card gold-accent sun-card">
+                            <i class="fa-solid fa-sun sun-icon animated-icon"></i>
+                            <div class="sun-details">
+                                <h3>Sunrise</h3>
+                                <p id="sunrise">--:-- AM</p>
+                            </div>
+                        </div>
+                        <div class="metric-card rose-accent sun-card">
+                            <i class="fa-solid fa-moon sun-icon animated-icon"></i>
+                            <div class="sun-details">
+                                <h3>Sunset</h3>
+                                <p id="sunset">--:-- PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+<!-- INTERACTIVE FOOTER -->
+
+<footer class="app-footer">
+    <div class="footer-top">
+        <!-- 1. Brand & Social -->
+        <div class="footer-brand">
+            <div class="logo">
+                <i class="fa-solid fa-cloud-sun animated-logo"></i>
+                <span>WeatherPulse</span>
+            </div>
+            <p class="brand-tagline">Real-time dynamic weather analytics dashboard.</p>
+            
+            <div class="status-container">
+                <div class="status-badge">
+                    <span class="status-dot"></span> Live API Connected
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="https://github.com/MobeenFatimaa" target="_blank" rel="noopener noreferrer" class="social-icon" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a href="https://www.linkedin.com/in/mobeen-fatima-599a35347/" target="_blank" rel="noopener noreferrer" class="social-icon" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a href="mailto:fatimahmobeen47@gmail.com" class="social-icon" title="Email Us"><i class="fa-solid fa-envelope"></i></a>
+            </div>
+        </div>
+
+        <!-- 2. Quick Search Chips -->
+        <div class="footer-section">
+            <h4>Quick Search</h4>
+            <div class="city-chips">
+                <button class="chip-btn" data-city="London">London</button>
+                <button class="chip-btn" data-city="Tokyo">Tokyo</button>
+                <button class="chip-btn" data-city="New York">New York</button>
+                <button class="chip-btn" data-city="Cairo">Cairo</button>
+                <button class="chip-btn" data-city="Sydney">Sydney</button>
+            </div>
+        </div>
+
+        <!-- 3. Feedback Section -->
+        <div class="footer-section feedback-section">
+            <h4>Send Feedback</h4>
+            <div class="rating-stars" id="ratingStars">
+                <i class="fa-solid fa-star star" data-value="1"></i>
+                <i class="fa-solid fa-star star" data-value="2"></i>
+                <i class="fa-solid fa-star star" data-value="3"></i>
+                <i class="fa-solid fa-star star" data-value="4"></i>
+                <i class="fa-solid fa-star star" data-value="5"></i>
+            </div>
+            <form class="feedback-form" id="feedbackForm">
+                <input type="text" id="feedbackInput" placeholder="How's your experience?" required autocomplete="off" />
+                <button type="submit" class="feedback-submit-btn" title="Submit">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+            <p class="feedback-msg" id="feedbackMsg"></p>
+        </div>
+
+        <!-- 4. Global Time & Interactive Actions Combined -->
+        <div class="footer-section">
+            <h4>Global Time (UTC)</h4>
+            <div class="utc-clock" id="utc-clock">00:00:00 UTC</div>
+            <p class="update-rate"><i class="fa-solid fa-bolt"></i> Refresh Rate: Real-time</p>
+            
+            <h4 style="margin-top: 15px;">Quick Actions</h4>
+            <div class="footer-actions-row">
+                <button class="footer-btn" id="shareDashBtn" title="Share Dashboard"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                <button class="footer-btn" id="footerUnitBtn"><i class="fa-solid fa-temperature-half"></i> Unit</button>
+                <button class="footer-btn" id="scrollTopBtn"><i class="fa-solid fa-arrow-up"></i> Top</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2026 WeatherPulse.Developed by Mobeen Fatima. Built with OpenWeatherMap & Leaflet.js</p>
+    </div>
+</footer>
+    <script src="script.js"></script>
+</body>
+
+</html>
